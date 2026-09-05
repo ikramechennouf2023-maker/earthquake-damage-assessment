@@ -1,0 +1,15 @@
+{
+  "temperature": 1.1719,
+  "metrics": {
+    "split": "val",
+    "n_buildings": 6166,
+    "per_class_f1": {
+      "no-damage": 0.923,
+      "minor-damage": 0.5797,
+      "major-damage": 0.6623,
+      "destroyed": 0.8885
+    },
+    "macro_f1": 0.7634,
+    "harmonic_f1": 0.7348
+  }
+}

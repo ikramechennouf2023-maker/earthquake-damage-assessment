@@ -1,0 +1,13 @@
+{
+    "site": "Asni",
+    "pre_safe": "C:\\Users\\PC\\Documents\\dinov3_model\\input\\Asni\\pre\\S2A_MSIL2A_2023_09_08_Asni_PRE_.SAFE",
+    "post_safe": "C:\\Users\\PC\\Documents\\dinov3_model\\input\\Asni\\post\\S2B_MSIL2A_2023_09_13_Asni_POST.SAFE(1)\\S2B_MSIL2A_20230913T110639_N0510_R137_T29RNQ_20241106T164843.SAFE",
+    "output": "C:\\Users\\PC\\Documents\\dinov3_model\\output\\Asni",
+    "rgb_dir": "C:\\Users\\PC\\Documents\\dinov3_model\\output\\Asni\\rgb",
+    "tile_dir": "C:\\Users\\PC\\Documents\\dinov3_model\\output\\Asni\\tiles",
+    "tensor_dir": "C:\\Users\\PC\\Documents\\dinov3_model\\output\\Asni\\tensor",
+    "logits_dir": "C:\\Users\\PC\\Documents\\dinov3_model\\output\\Asni\\logits",
+    "prediction_dir": "C:\\Users\\PC\\Documents\\dinov3_model\\output\\Asni\\prediction",
+    "visualization_dir": "C:\\Users\\PC\\Documents\\dinov3_model\\output\\Asni\\visualization",
+    "report_dir": "C:\\Users\\PC\\Documents\\dinov3_model\\reports"
+}

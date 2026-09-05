@@ -1,0 +1,67 @@
+backbone: terratorch_dinov3_vitl16
+hf_ckpt_repo: kshitijrajsharma/dinov3
+hf_ckpt_file: dinov3_vitl16_pretrain_sat493m-eadcf0ff.pth
+img_size: 512
+patch_size: 16
+seg_out_indices:
+- 5
+- 11
+- 17
+- 23
+embed_dim: 1024
+decoder_channels: 256
+unfreeze_last_n: 0
+use_pre: true
+modality_dropout: 0.3
+augment_photometric: true
+dataset_repo: EVER-Z/torchange_xView2
+dataset_splits:
+- train
+- tier3
+data_root: data/xbd
+data_pct: 100.0
+val_events: []
+test_events: []
+val_frac: 0.1
+batch_size: 8
+eval_batch_size: 8
+num_workers: 8
+pin_memory: true
+persistent_workers: true
+lr: 0.001
+weight_decay: 0.001
+max_epochs: 35
+early_stop_patience: 8
+loc_loss_weight: 0.3
+dmg_loss_weight: 1.0
+ordinal_distance_power: 1.0
+class_weights:
+- 0.3198342937264389
+- 3.1176418730772504
+- 3.627988340255128
+- 3.610227664752446
+onecycle_pct_start: 0.05
+onecycle_div_factor: 25.0
+onecycle_final_div_factor: 10000.0
+precision: bf16-mixed
+seed: 42
+grad_clip: 1.0
+output_dir: outputs
+run_name: dda_deploy
+tile_window: 512
+tile_stride: 384
+pool_op: percentile
+pool_percentile: 80.0
+confidence_threshold: 0.5
+temperature: 1.0
+probe:
+  data_pct: 20.0
+  max_epochs: 12
+  lr: 0.001
+  unfreeze_last_n: 0
+  grid_ckpt_files:
+  - dinov3_vitl16_pretrain_sat493m-eadcf0ff.pth
+  - dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth
+  grid_unfreeze:
+  - 0
+  - 4

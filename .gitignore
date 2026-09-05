@@ -1,0 +1,36 @@
+# Environnement virtuel
+.venv/
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# Fichiers macOS
+.DS_Store
+
+# Cache Jupyter
+.ipynb_checkpoints/
+
+# Résultats générés
+outputs/
+reports/
+
+# Logs
+*.log
+
+# Fichiers temporaires
+*.tmp
+
+# Données volumineuses (images satellitaires, poids du modèle)
+input/
+model/
+tensors/
+tiles/
+*.zip
+
+# Meme chose dans le sous-dossier model_dinov3_3
+model_dinov3_3/input/
+model_dinov3_3/outputs/
+model_dinov3_3/model/
+model_dinov3_3/tensors/
+model_dinov3_3/tiles/
