@@ -1,64 +1,133 @@
----
-base_model: kshitijrajsharma/dinov3
-datasets:
-  - kshitijrajsharma/xview2-xbd
-license: cc-by-nc-sa-4.0
-tags:
-  - disaster-response
-  - damage-assessment
-  - remote-sensing
-  - dinov3
-  - building-damage
----
+# Détection et Classification Automatique des Bâtiments Endommagés par Deep Learning
 
-# kshitijrajsharma/dinov3-damage-assessment
+Détection et classification automatique des dommages aux bâtiments à partir d'images satellitaires, en utilisant une architecture siamoise DINOv3-UperNet. Projet de stage réalisé au sein du **FSEC** (Fonds de Solidarité contre les Événements Catastrophiques, Maroc), avec évaluation sur le dataset **xBD** et application réelle au **séisme d'Al Haouz** (8 septembre 2023).
 
-Building-level disaster damage assessment. A frozen DINOv3 ViT-L/16 satellite backbone with a
-trainable UperNet decoder and two heads (localization + ordinal 4-class damage). Given building
-footprints and post-disaster imagery (optionally pre-disaster imagery), it assigns each building a
-damage level on the xBD Joint Damage Scale with a calibrated confidence.
+## 📋 Contexte
 
-## Damage classes
+Après une catastrophe naturelle, l'évaluation rapide des dommages aux bâtiments est essentielle pour organiser les secours et l'indemnisation des victimes. Les méthodes traditionnelles (inspections de terrain) sont lentes et coûteuses en ressources humaines. Ce projet explore l'utilisation d'un modèle de Deep Learning pré-entraîné pour automatiser cette évaluation à partir d'images satellitaires pré/post-catastrophe.
 
-`no-damage`, `minor-damage`, `major-damage`, `destroyed`.
+## 🎯 Ce que fait ce projet
 
-## Object-level metrics (val split, 6166 buildings)
+- Évalue un modèle DINOv3-UperNet pré-entraîné sur le dataset de référence **xBD**
+- Applique ce modèle à un cas réel : le séisme d'Al Haouz (Maroc, 2023)
+- Compare les performances entre imagerie **Sentinel-2** (gratuite, 10 m/pixel) et **Pléiades** (commerciale, ~0,5 m/pixel)
+- Valide les résultats face à un référentiel officiel de dommages (**Copernicus EMS**)
+- Analyse la calibration des probabilités et la robustesse du seuil de confiance
+- Propose une application de démonstration interactive (**Streamlit**)
 
-| class | F1 |
+## 🏗️ Architecture et pipeline
+
+```
+Images pré/post-catastrophe
+        │
+        ▼
+Découpage en tuiles 512×512
+        │
+        ▼
+Normalisation (statistiques ImageNet)
+        │
+        ▼
+Backbone DINOv3 (siamois)
+        │
+        ▼
+Décodeur UperNet
+        │
+        ▼
+Logits (1, 4, H, W)
+        │
+        ▼
+Softmax + calibration (T = 1,1719)
+        │
+        ▼
+Carte de dommages (par pixel)
+        │
+        ▼
+Agrégation par empreinte de bâtiment
+        │
+        ▼
+Classe de dommage par bâtiment
+   (No Damage / Minor / Major / Destroyed)
+```
+
+> **Note** : le modèle DINOv3-UperNet utilisé était déjà pré-entraîné et fourni au format ONNX. Le travail de ce projet porte sur la reconstruction du pipeline d'inférence, le prétraitement, l'évaluation, l'analyse de généralisation et l'application opérationnelle — pas sur l'entraînement du modèle.
+
+## 📊 Résultats clés
+
+### Évaluation sur le dataset xBD
+
+| Métrique | Valeur |
 |---|---|
-| no-damage | 0.923 |
-| minor-damage | 0.5797 |
-| major-damage | 0.6623 |
-| destroyed | 0.8885 |
+| Accuracy globale | 95,55 % |
+| F1-Score pondéré | 94,47 % |
+| Accuracy — scènes Mexico | 99,46 % |
+| Accuracy — scènes Palu | 91,64 % |
 
-Macro F1 0.7634 | harmonic damage F1 0.7348.
+### Application au séisme d'Al Haouz
 
-The damage F1 is computed on building pixels only (background excluded). Numbers are
-in-distribution (the xView2 benchmark splits by tile, so the same events appear in train and
-test); cross-event generalisation to a fully unseen disaster is harder for the subtle
-minor/major classes.
+| Indicateur | Sentinel-2 (10 m) | Pléiades (~0,5 m) |
+|---|---|---|
+| Recall sur 93 bâtiments confirmés (Copernicus EMS) | **0 %** | — |
+| Confiance calibrée moyenne | 0,250 | 0,46 – 0,61 |
 
-## Inputs and outputs
+**Constat principal** : le modèle, excellent sur son domaine d'entraînement (xBD), voit ses performances s'effondrer sur imagerie Sentinel-2 (résolution 10 m), mais retrouve des niveaux de confiance satisfaisants sur imagerie Pléiades (résolution sub-métrique, proche du domaine d'entraînement). Ce résultat suggère que la résolution spatiale constitue un facteur majeur expliquant les performances observées, avec une implication opérationnelle directe pour le FSEC : l'évaluation fiable des dommages avec ce type de modèle nécessite une imagerie à très haute résolution.
 
-- Input: building footprints (GeoJSON) + post-disaster RGB GeoTIFF, optionally a pre-disaster
-  GeoTIFF aligned to the post grid. Footprints must overlay the post image correctly.
-- Output: the footprints annotated with `damage_class`, `damage`, `confidence`, `review`, and
-  per-class probabilities.
+## 📁 Structure du dépôt
 
-## Files
+```
+.
+├── main.py                        # Point d'entrée principal du pipeline
+├── config.py / config.yaml        # Configuration du projet
+├── calibration.json               # Paramètres de calibration du modèle
+├── requirements.txt               # Dépendances Python
+├── scripts/
+│   ├── pipeline_principal/        # Pipeline complet : tuilage, inférence, 
+│   │                               # évaluation, visualisation
+│   └── preparation_pleiades/      # Scripts spécifiques au traitement 
+│                                   # des images Pléiades (Al Haouz)
+├── model_dinov3_3/                # Notebooks et exports de synthèse
+└── structure.txt                  # Arborescence détaillée du projet
+```
 
-- `model.onnx`: self-contained inference graph (post, pre -> damage logits).
-- `model.ckpt`: Lightning checkpoint for evaluation or further training.
-- `config.yaml`: training configuration.
-- `calibration.json`: confidence temperature (1.1719).
+> Les dossiers de données volumineux (`input/`, `model/`, `outputs/`, `tensors/`, `tiles/`) ne sont pas versionnés sur ce dépôt en raison de leur taille (plusieurs Go) — voir `.gitignore`.
 
-## Confidence
+## ⚙️ Installation
 
-Apply `softmax(logits / 1.1719)` for calibrated probabilities. Buildings below the
-confidence threshold are flagged for human review.
+```bash
+git clone https://github.com/ikramechennouf2023-maker/earthquake-damage-assessment.git
+cd earthquake-damage-assessment
+python -m venv .venv
+source .venv/bin/activate  # ou .venv\Scripts\activate sous Windows
+pip install -r requirements.txt --break-system-packages
+```
 
-## Backbone
+## 🛠️ Technologies utilisées
 
-DINOv3 ViT-L/16 (`sat493m`), frozen. Decoder, fusion, and heads are the only trained parameters
-(~24M). Trained on xBD (xView2), license CC BY-NC-SA 4.0; this model inherits the non-commercial
-share-alike terms.
+- **Modèle** : DINOv3 (backbone, Meta AI) + UperNet (décodeur de segmentation)
+- **Inférence** : ONNX Runtime (avec accélération CoreML sur macOS)
+- **Traitement géospatial** : Rasterio, GeoPandas, Shapely, PyProj
+- **Traitement d'image** : Pillow, OpenCV, NumPy
+- **Évaluation** : Scikit-learn
+- **Application de démonstration** : Streamlit
+- **Langage** : Python 3
+
+## 📚 Données
+
+- **[xBD](https://xview2.org/)** — dataset de référence pour l'évaluation des dommages post-catastrophe (Gupta et al., 2019)
+- **Sentinel-2** — imagerie optique gratuite, programme Copernicus
+- **Pléiades** — imagerie commerciale à très haute résolution
+- **[Copernicus EMS](https://rapidmapping.emergency.copernicus.eu/EMSR695)** — référentiel officiel de dommages (activation EMSR695, séisme d'Al Haouz)
+
+## 🎓 Contexte académique
+
+Projet réalisé dans le cadre d'un stage de fin d'études à l'**Université Euro-Méditerranéenne de Fès (UEMF)**, filière Ingénierie Digitale et Intelligence Artificielle, au sein du **Fonds de Solidarité contre les Événements Catastrophiques (FSEC)**, Maroc.
+
+## 👥 Auteurs
+
+- **Ikrame Chennouf**
+- **Firdawss El Hayouni**
+
+**Encadrante** : Mme Lamya Amghar
+
+## 📄 Licence
+
+Ce projet est distribué sous licence MIT — voir le fichier `LICENSE` pour plus de détails.
